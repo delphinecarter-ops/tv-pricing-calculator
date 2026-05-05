@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EverTrue — Send Volume Pricing Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Proxima+Nova:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --true-purple: #995cd3;
+    --dark-purple: #451f99;
+    --off-black: #242436;
+    --med-purple: #b38ceb;
+    --light-purple: #d8c0ff;
+    --tan: #f7e9db;
+    --white: #ffffff;
+    --success: #2d7a4f;
+    --success-bg: #e8f5ee;
+    --warn: #8a5a00;
+    --warn-bg: #fff3d6;
+    --danger: #a32d2d;
+    --danger-bg: #fceaea;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Proxima Nova', 'Proxima Nova Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--tan);
+    color: var(--off-black);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--off-black);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-pyramid {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logo-wordmark {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .header-tag {
+    font-size: 12px;
+    color: var(--light-purple);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, var(--dark-purple) 0%, var(--true-purple) 100%);
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 900;
+    font-size: clamp(28px, 4vw, 42px);
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+
+  .hero p {
+    font-size: 16px;
+    color: var(--light-purple);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* Main layout */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Card */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 12px rgba(36,36,54,0.08);
+  }
+
+  .card-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--dark-purple);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1.5px solid var(--light-purple);
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex;
+    background: var(--tan);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 1.75rem;
+    width: fit-content;
+  }
+
+  .mode-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--off-black);
+    cursor: pointer;
+    transition: all 0.18s;
+    opacity: 0.6;
+  }
+
+  .mode-btn.active {
+    background: var(--white);
+    color: var(--dark-purple);
+    opacity: 1;
+    box-shadow: 0 1px 4px rgba(36,36,54,0.12);
+  }
+
+  /* Sliders */
+  .input-group { margin-bottom: 1.5rem; }
+
+  .input-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .input-label span:first-child {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--off-black);
+  }
+
+  .input-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--true-purple);
+    font-family: 'Fraunces', Georgia, serif;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, var(--true-purple) 0%, var(--true-purple) var(--pct, 40%), var(--light-purple) var(--pct, 40%), var(--light-purple) 100%);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--dark-purple);
+    border: 3px solid var(--white);
+    box-shadow: 0 1px 6px rgba(69,31,153,0.35);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--dark-purple);
+    border: 3px solid var(--white);
+    cursor: pointer;
+  }
+
+  .manual-input-wrap { display: flex; align-items: center; gap: 12px; }
+
+  .manual-input-wrap label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--off-black);
+    white-space: nowrap;
+  }
+
+  input[type=number] {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark-purple);
+    border: 2px solid var(--light-purple);
+    border-radius: 10px;
+    padding: 8px 16px;
+    width: 180px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type=number]:focus { border-color: var(--true-purple); }
+
+  /* Result banner */
+  .result-banner {
+    background: linear-gradient(135deg, var(--dark-purple), var(--true-purple));
+    border-radius: 14px;
+    padding: 1.75rem 2rem;
+    color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .result-label { font-size: 13px; color: var(--light-purple); margin-bottom: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .result-band-name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .result-sends { font-size: 14px; color: var(--light-purple); margin-top: 4px; }
+
+  .result-price-wrap { text-align: right; }
+
+  .result-price {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .result-price-sub { font-size: 13px; color: var(--light-purple); margin-top: 4px; }
+
+  /* Metric grid */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric {
+    background: var(--tan);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: #7a6e84;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .metric-value {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--off-black);
+  }
+
+  .metric-value.good { color: var(--success); }
+  .metric-value.warn { color: var(--warn); }
+  .metric-value.danger { color: var(--danger); }
+
+  .metric-sub {
+    font-size: 11px;
+    color: #7a6e84;
+    margin-top: 2px;
+  }
+
+  /* Grace pill */
+  .grace-pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid #a8dbbe;
+    font-weight: 600;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  /* Alert strips */
+  .alert {
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    display: none;
+    border-left: 4px solid;
+  }
+
+  .alert.amber { background: var(--warn-bg); color: var(--warn); border-color: #f5a623; }
+  .alert.red { background: var(--danger-bg); color: var(--danger); border-color: #e24b4a; }
+  .alert.visible { display: block; }
+
+  /* Band ladder */
+  .ladder { width: 100%; }
+
+  .ladder-row {
+    display: grid;
+    grid-template-columns: 52px 1fr 64px 58px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .ladder-band {
+    font-size: 12px;
+    font-weight: 700;
+    color: #9a8faa;
+    text-align: right;
+  }
+
+  .ladder-band.active { color: var(--dark-purple); }
+
+  .ladder-track {
+    height: 24px;
+    background: #f0eaf8;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ladder-track.active {
+    background: #ede4fa;
+    box-shadow: inset 0 0 0 1.5px var(--med-purple);
+  }
+
+  .ladder-fill {
+    height: 100%;
+    border-radius: 5px 0 0 5px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: width 0.25s ease;
+    background: var(--true-purple);
+  }
+
+  .ladder-fill.warn { background: #f5a623; }
+  .ladder-fill.danger { background: #e24b4a; }
+
+  .ladder-grace-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(45,122,79,0.12);
+    border-left: 2px dashed rgba(45,122,79,0.5);
+  }
+
+  .ladder-ceil-mark {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(138,90,0,0.5);
+  }
+
+  .ladder-pin {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    width: 3px;
+    background: var(--dark-purple);
+    border-radius: 2px;
+    z-index: 3;
+    box-shadow: 0 0 0 2px rgba(69,31,153,0.25);
+  }
+
+  .ladder-price {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #9a8faa;
+    text-align: right;
+  }
+
+  .ladder-price.active { color: var(--dark-purple); }
+
+  .ladder-ceil {
+    font-size: 11px;
+    color: #9a8faa;
+    text-align: left;
+    padding-left: 4px;
+  }
+
+  .ladder-ceil.active { color: var(--true-purple); font-weight: 600; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #ede4fa;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #7a6e84;
+  }
+
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  .footer {
+    background: var(--off-black);
+    text-align: center;
+    padding: 2rem;
+    margin-top: 3rem;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .footer p {
+    font-size: 12px;
+    color: #6b6b82;
+    line-height: 1.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .card { padding: 1.25rem; }
+    .result-banner { flex-direction: column; }
+    .result-price-wrap { text-align: left; }
+    .ladder-row { grid-template-columns: 40px 1fr 56px 48px; gap: 5px; }
+    .ladder-band { font-size: 11px; }
+    .ladder-price { font-size: 12px; }
+    .ladder-ceil { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <a class="logo" href="#">
+    <svg class="logo-pyramid" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="14,2 26,24 2,24" fill="none" stroke="#995cd3" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="14,8 21,22 7,22" fill="#995cd3" opacity="0.5"/>
+    </svg>
+    <span class="logo-wordmark">EverTrue</span>
+  </a>
+  <span class="header-tag">Pricing Calculator</span>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Find your send band</h1>
+  <p>Estimate your annual email and SMS sends to find the right pricing tier — and understand exactly what happens if you grow beyond it.</p>
+</div>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Estimator card -->
+  <div class="card">
+    <div class="card-title">Estimate your annual send volume</div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('build')" id="btn-build">Build from activity</button>
+      <button class="mode-btn" onclick="setMode('manual')" id="btn-manual">I know my volume</button>
+    </div>
+
+    <!-- Build mode -->
+    <div id="build-mode">
+      <div class="input-group">
+        <div class="input-label">
+          <span>Contacts in database</span>
+          <span class="input-value" id="contacts-out">5,000</span>
+        </div>
+        <input type="range" id="contacts" min="100" max="50000" step="100" value="5000" oninput="update()" style="--pct:9.8%">
+      </div>
+      <div class="input-group">
+        <div class="input-label">
+          <span>Campaigns per month</span>
+          <span class="input-value" id="campaigns-out">4</span>
+        </div>
+        <input type="range" id="campaigns" min="1" max="24" step="1" value="4" oninput="update()" style="--pct:13%">
+      </div>
+      <div class="input-group">
+        <div class="input-label">
+          <span>What share of contacts get a typical send?</span>
+          <span class="input-value" id="reach-out">40%</span>
+        </div>
+        <input type="range" id="reach" min="5" max="100" step="5" value="40" oninput="update()" style="--pct:37%">
+        <div style="font-size:12px; color:#7a6e84; margin-top:6px;">Most advancement shops send to 20–50% of their list per campaign.</div>
+      </div>
+    </div>
+
+    <!-- Manual mode -->
+    <div id="manual-mode" style="display:none;">
+      <div class="input-group">
+        <div class="manual-input-wrap">
+          <label>Estimated annual sends</label>
+          <input type="number" id="manual-sends" value="5000" min="0" oninput="update()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result card -->
+  <div class="card">
+    <div class="result-banner">
+      <div>
+        <div class="result-label">Your recommended band</div>
+        <div class="result-band-name" id="res-band">Band 3 — up to 6,000 sends/yr</div>
+        <div class="result-sends" id="res-sends">Est. 9,600 sends/yr</div>
+      </div>
+      <div class="result-price-wrap">
+        <div class="result-label">Annual price</div>
+        <div class="result-price" id="res-price">$11,500</div>
+        <div class="result-price-sub">per year</div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Band ceiling</div>
+        <div class="metric-value" id="m-ceiling">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">CSM alert at</div>
+        <div class="metric-value good" id="m-alert">—</div>
+        <div class="metric-sub">85% of ceiling</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Sends blocked at</div>
+        <div class="metric-value danger" id="m-block">—</div>
+        <div class="metric-sub" id="m-grace-sub">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Free grace buffer <span class="grace-pill" id="grace-pill">—</span></div>
+        <div class="metric-value" id="m-grace">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Max upgrade cost</div>
+        <div class="metric-value warn" id="m-upgrade">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Upgrades to</div>
+        <div class="metric-value" id="m-next" style="font-size:15px;">—</div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert amber" id="alert-near"></div>
+    <div class="alert red" id="alert-over"></div>
+
+    <!-- Band ladder -->
+    <div class="card-title" style="margin-top:1.5rem;">Where you sit across all bands</div>
+    <div class="ladder" id="ladder"></div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:var(--true-purple);"></div>
+        Your estimated sends
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:rgba(45,122,79,0.18); border: 1.5px dashed rgba(45,122,79,0.6);"></div>
+        Free grace buffer
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:rgba(138,90,0,0.45);"></div>
+        Band ceiling
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#e24b4a;"></div>
+        Over ceiling
+      </div>
+    </div>
+  </div>
+
+  <!-- Info card -->
+  <div class="card" style="background: linear-gradient(135deg, #f0eaf8, var(--tan));">
+    <div class="card-title">How the overage model works</div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem;">
+      <div>
+        <div style="font-size:13px; font-weight:700; color:var(--success); margin-bottom:4px;">85% — Early warning</div>
+        <div style="font-size:13px; color:#5a5470; line-height:1.5;">Automated alert fires. Your CSM reaches out to start the upgrade conversation before you hit the ceiling.</div>
+      </div>
+      <div>
+        <div style="font-size:13px; font-weight:700; color:var(--warn); margin-bottom:4px;">100% — At ceiling</div>
+        <div style="font-size:13px; color:#5a5470; line-height:1.5;">Second alert fires. Grace buffer activates — you can continue sending at no additional charge.</div>
+      </div>
+      <div>
+        <div style="font-size:13px; font-weight:700; color:var(--danger); margin-bottom:4px;">110–120% — Sends blocked</div>
+        <div style="font-size:13px; color:#5a5470; line-height:1.5;">Grace buffer exhausted. Sends are paused until you upgrade or your contract term renews. No surprise charges.</div>
+      </div>
+    </div>
+    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid #ddd4f0; font-size:12px; color:#7a6e84; line-height:1.6;">
+      Email and SMS sends draw from the same shared pool. Grace buffer is the greater of 2% of your band ceiling or 200 sends, whichever is larger — and is always free of charge.
+    </div>
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-logo">
+    <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+      <polygon points="14,2 26,24 2,24" fill="none" stroke="#995cd3" stroke-width="2.5" stroke-linejoin="round"/>
+      <polygon points="14,8 21,22 7,22" fill="#995cd3" opacity="0.5"/>
+    </svg>
+    <span style="font-family:'Fraunces',serif; font-weight:900; font-size:16px; color:var(--white);">EverTrue</span>
+  </div>
+  <p>Pricing estimates are for illustration purposes. Final pricing confirmed in your agreement.<br>
+  Questions? Contact your EverTrue account team.</p>
+</footer>
+
+<script>
+const bands = [
+  {n:1,  label:'Band 1',  max:1000,   price:8500},
+  {n:2,  label:'Band 2',  max:2500,   price:10000},
+  {n:3,  label:'Band 3',  max:6000,   price:11500},
+  {n:4,  label:'Band 4',  max:12000,  price:13000},
+  {n:5,  label:'Band 5',  max:30000,  price:14000},
+  {n:6,  label:'Band 6',  max:60000,  price:15000},
+  {n:7,  label:'Band 7',  max:100000, price:20500},
+  {n:8,  label:'Band 8',  max:200000, price:22000},
+  {n:9,  label:'Band 9',  max:500000, price:23000},
+  {n:10, label:'Band 10', max:null,   price:44000},
+];
+
+let mode = 'build';
+
+function graceFor(ceiling) {
+  const pct = Math.round(ceiling * 0.02);
+  return pct >= 200 ? {sends: pct, method: '2%'} : {sends: 200, method: '200 sends'};
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('build-mode').style.display = m === 'build' ? '' : 'none';
+  document.getElementById('manual-mode').style.display = m === 'manual' ? '' : 'none';
+  document.getElementById('btn-build').classList.toggle('active', m === 'build');
+  document.getElementById('btn-manual').classList.toggle('active', m === 'manual');
+  update();
+}
+
+function fmtN(n) { return Math.round(n).toLocaleString(); }
+function fmtD(n) { return '$' + Math.round(n).toLocaleString(); }
+function fmtShort(n) {
+  if (n == null) return '500K+';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n % 1000 === 0 ? (n/1000) : (n/1000).toFixed(1)) + 'K';
+  return String(n);
+}
+
+function getSends() {
+  if (mode === 'manual') return parseInt(document.getElementById('manual-sends').value) || 0;
+  const c = parseInt(document.getElementById('contacts').value);
+  const cp = parseInt(document.getElementById('campaigns').value);
+  const r = parseInt(document.getElementById('reach').value) / 100;
+  return Math.round(c * cp * 12 * r);
+}
+
+function updateSliderPct(el) {
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  el.style.setProperty('--pct', ((val - min) / (max - min) * 100) + '%');
+}
+
+function getBand(s) { return bands.find(b => b.max == null || s <= b.max) || bands[bands.length - 1]; }
+
+function buildLadder(sends, activeBand) {
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML = '';
+
+  bands.forEach(b => {
+    const ceiling = b.max || 500000;
+    const g = graceFor(ceiling);
+    const blockAt = ceiling + g.sends;
+    const isActive = b === activeBand;
+
+    const fillPct = Math.min(sends / blockAt, 1) * 100;
+    const ceilPct = (ceiling / blockAt) * 100;
+    const isOver = sends > ceiling;
+    const isWarn = !isOver && isActive && sends > ceiling * 0.85;
+
+    const row = document.createElement('div');
+    row.className = 'ladder-row';
+
+    const bLabel = document.createElement('div');
+    bLabel.className = 'ladder-band' + (isActive ? ' active' : '');
+    bLabel.textContent = `B${b.n}`;
+
+    const track = document.createElement('div');
+    track.className = 'ladder-track' + (isActive ? ' active' : '');
+
+    if (isActive) {
+      const grace = document.createElement('div');
+      grace.className = 'ladder-grace-zone';
+      grace.style.left = ceilPct + '%';
+      grace.style.right = '0';
+      track.appendChild(grace);
+
+      const ceilMark = document.createElement('div');
+      ceilMark.className = 'ladder-ceil-mark';
+      ceilMark.style.left = ceilPct + '%';
+      track.appendChild(ceilMark);
+
+      const fill = document.createElement('div');
+      fill.className = 'ladder-fill' + (isOver ? ' danger' : isWarn ? ' warn' : '');
+      fill.style.width = fillPct + '%';
+      track.appendChild(fill);
+
+      const pin = document.createElement('div');
+      pin.className = 'ladder-pin';
+      pin.style.left = Math.min(fillPct, 99) + '%';
+      track.appendChild(pin);
+    }
+
+    const priceEl = document.createElement('div');
+    priceEl.className = 'ladder-price' + (isActive ? ' active' : '');
+    priceEl.textContent = fmtD(b.price);
+
+    const ceilEl = document.createElement('div');
+    ceilEl.className = 'ladder-ceil' + (isActive ? ' active' : '');
+    ceilEl.textContent = fmtShort(b.max);
+
+    row.appendChild(bLabel);
+    row.appendChild(track);
+    row.appendChild(priceEl);
+    row.appendChild(ceilEl);
+    ladder.appendChild(row);
+  });
+}
+
+function update() {
+  if (mode === 'build') {
+    ['contacts', 'campaigns', 'reach'].forEach(id => updateSliderPct(document.getElementById(id)));
+    const c = parseInt(document.getElementById('contacts').value);
+    const cp = parseInt(document.getElementById('campaigns').value);
+    const r = parseInt(document.getElementById('reach').value);
+    document.getElementById('contacts-out').textContent = fmtN(c);
+    document.getElementById('campaigns-out').textContent = cp;
+    document.getElementById('reach-out').textContent = r + '%';
+  }
+
+  const sends = getSends();
+  const band = getBand(sends);
+  const idx = bands.indexOf(band);
+  const ceiling = band.max || 500000;
+  const alert85 = Math.round(ceiling * 0.85);
+  const g = graceFor(ceiling);
+  const block = ceiling + g.sends;
+  const nextBand = idx < bands.length - 1 ? bands[idx + 1] : null;
+  const upgradeCost = nextBand ? nextBand.price - band.price : null;
+
+  document.getElementById('res-band').textContent = `Band ${band.n} — up to ${fmtN(ceiling)} sends/yr`;
+  document.getElementById('res-sends').textContent = 'Est. ' + fmtN(sends) + ' sends/yr';
+  document.getElementById('res-price').textContent = fmtD(band.price);
+  document.getElementById('m-ceiling').textContent = fmtN(ceiling);
+  document.getElementById('m-alert').textContent = fmtN(alert85) + ' sends';
+  document.getElementById('m-block').textContent = fmtN(block) + ' sends';
+  document.getElementById('m-grace-sub').textContent = g.method + ' grace';
+  document.getElementById('m-grace').textContent = '+' + fmtN(g.sends) + ' sends';
+  document.getElementById('grace-pill').textContent = g.method;
+  document.getElementById('m-upgrade').textContent = upgradeCost ? fmtD(upgradeCost) : '—';
+  document.getElementById('m-next').textContent = nextBand ? `Band ${nextBand.n} · ${fmtD(nextBand.price)}/yr` : 'Custom pricing';
+
+  const nearAlert = document.getElementById('alert-near');
+  const overAlert = document.getElementById('alert-over');
+
+  if (sends > ceiling) {
+    nearAlert.classList.remove('visible');
+    overAlert.classList.add('visible');
+    overAlert.textContent = `Your estimate exceeds Band ${band.n}'s ceiling by ${fmtN(sends - ceiling)} sends. Your free grace buffer covers ${fmtN(g.sends)} additional sends — but sends will be blocked at ${fmtN(block)}. Upgrading to Band ${nextBand ? nextBand.n : 'Custom'} costs ${upgradeCost ? fmtD(upgradeCost) + ' more per year' : 'custom pricing'}.`;
+  } else if (sends > alert85) {
+    overAlert.classList.remove('visible');
+    nearAlert.classList.add('visible');
+    nearAlert.textContent = `You're within ${fmtN(ceiling - sends)} sends of your band ceiling. Your CSM will reach out at this level — upgrading to Band ${nextBand ? nextBand.n : 'Custom'} costs ${upgradeCost ? fmtD(upgradeCost) + ' more per year' : 'custom pricing'}.`;
+  } else {
+    nearAlert.classList.remove('visible');
+    overAlert.classList.remove('visible');
+  }
+
+  buildLadder(sends, band);
+}
+
+update();
+</script>
+</body>
+</html>
